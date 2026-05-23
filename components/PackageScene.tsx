@@ -208,7 +208,7 @@ const FINAL_BOTTLE_RESTORE = {
 const FINAL_COPY_ANIMATION = {
   enterDelay: 2.1,
   enterDuration: 1.9,
-  enterStagger: 0.16,
+  enterStagger: 0,
   exitDuration: 0.34,
 };
 
