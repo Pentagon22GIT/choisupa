@@ -132,6 +132,14 @@ const BINMAP_DISPLAY = {
   rotateZDeg: -7,
 };
 
+const BINMAP_TEXT_SWAP = {
+  exitDuration: 0.8,
+  betweenDelay: 0.1,
+  enterDuration: 1.05,
+  buttonEnterDuration: 0.72,
+  buttonOverlap: 0.36,
+};
+
 const BINMAP_TO_FINAL_RESET = {
   duration: 0.9,
 };
@@ -198,8 +206,8 @@ const FINAL_BOTTLE_RESTORE = {
 };
 
 const FINAL_COPY_ANIMATION = {
-  enterDelay: 0.85,
-  enterDuration: 1.8,
+  enterDelay: 2.1,
+  enterDuration: 1.9,
   enterStagger: 0.16,
   exitDuration: 0.34,
 };
@@ -1217,12 +1225,31 @@ function PackageModel({
     updatePackageOutlineOpacityFromObjects();
   };
 
-  const showTasteObjects = () => {
+  const getFinalReverseSleeveX = () => {
+    const sleeveRoot = sleeveRootRef.current;
+
+    if (!sleeveRoot) return 0;
+
+    const baseX = sleeveRoot.userData.basePositionX ?? 0;
+
+    return baseX - TASTE_SLIDE_X;
+  };
+
+  const showTasteObjects = ({
+    reverseSleeveForFinal = false,
+  }: {
+    reverseSleeveForFinal?: boolean;
+  } = {}) => {
     binmapExitBaseStatesRef.current.forEach(
       ({ object, position, rotation }) => {
         object.visible = true;
         object.position.copy(position);
         object.rotation.copy(rotation);
+
+        if (reverseSleeveForFinal && object === sleeveRootRef.current) {
+          object.position.x = getFinalReverseSleeveX();
+        }
+
         setObjectOpacity(object, 1);
       },
     );
@@ -1255,7 +1282,10 @@ function PackageModel({
       ({ object, position, rotation }) => {
         object.visible = true;
 
-        object.position.x = position.x + BINMAP_PACKAGE_EXIT.moveX;
+        object.position.x =
+          object === sleeveRootRef.current
+            ? getFinalReverseSleeveX()
+            : position.x + BINMAP_PACKAGE_EXIT.moveX;
         object.position.y = position.y + BINMAP_PACKAGE_EXIT.moveY;
         object.position.z = position.z + BINMAP_PACKAGE_EXIT.moveZ;
 
@@ -1838,7 +1868,6 @@ function PackageModel({
 
     if (motionModeRef.current === "toFinal") {
       motionTimeRef.current += delta;
-
       const returnDuration = TRANSITION.finalReturnDuration;
       const closeDuration = TRANSITION.finalCloseDuration;
       const totalDuration = returnDuration + closeDuration;
@@ -1865,8 +1894,11 @@ function PackageModel({
         ({ object, position, rotation }) => {
           object.visible = true;
 
-          object.position.x =
-            position.x + BINMAP_PACKAGE_EXIT.moveX * reverseReturnEased;
+          const isSleeve = object === sleeveRootRef.current;
+
+          object.position.x = isSleeve
+            ? getFinalReverseSleeveX()
+            : position.x + BINMAP_PACKAGE_EXIT.moveX * reverseReturnEased;
 
           object.position.y =
             position.y + BINMAP_PACKAGE_EXIT.moveY * reverseReturnEased;
@@ -1970,9 +2002,9 @@ function PackageModel({
       );
 
       if (returnT >= 1) {
-        showTasteObjects();
+        showTasteObjects({ reverseSleeveForFinal: true });
 
-        setSleeveSlideX(THREE.MathUtils.lerp(TASTE_SLIDE_X, 0, closeEased));
+        setSleeveSlideX(THREE.MathUtils.lerp(-TASTE_SLIDE_X, 0, closeEased));
 
         const viewScale = THREE.MathUtils.lerp(
           getResponsiveViewScale(VIEW_SCALE.taste),
@@ -2002,7 +2034,7 @@ function PackageModel({
       }
 
       if (totalT >= 1) {
-        showTasteObjects();
+        showTasteObjects({ reverseSleeveForFinal: true });
 
         setSleeveSlideX(0);
 
@@ -2658,59 +2690,121 @@ export function PackageScene() {
   };
 
   const swapBinmapTextOnly = () => {
+    const binmapCopy = binmapCopyRef.current;
     const title = binmapTitleRef.current;
     const body = binmapBodyRef.current;
     const nextButton = binmapNextButtonRef.current;
 
-    if (!title || !body) {
+    if (!binmapCopy || !title || !body) {
       setBinmapTextMode("detail");
       return Promise.resolve();
     }
 
-    const targets = [title, body];
-
-    gsap.killTweensOf(targets);
-
-    if (nextButton) {
-      gsap.set(nextButton, {
-        pointerEvents: "none",
-      });
-    }
+    gsap.killTweensOf([binmapCopy, title, body, nextButton].filter(Boolean));
 
     setIsMotionLocked(true);
 
     return new Promise<void>((resolve) => {
-      gsap.to(targets, {
-        opacity: 0,
-        duration: 0.28,
-        ease: "power2.out",
+      const timeline = gsap.timeline({
         onComplete: () => {
-          setBinmapTextMode("detail");
-
-          requestAnimationFrame(() => {
-            gsap.set(targets, {
-              visibility: "visible",
-              opacity: 0,
+          if (nextButton) {
+            gsap.set(nextButton, {
+              pointerEvents: "auto",
             });
+          }
 
-            gsap.to(targets, {
-              opacity: 1,
-              duration: 0.42,
-              ease: "power2.out",
-              onComplete: () => {
-                if (nextButton) {
-                  gsap.set(nextButton, {
-                    pointerEvents: "auto",
-                  });
-                }
-
-                setIsMotionLocked(false);
-                resolve();
-              },
-            });
-          });
+          setIsMotionLocked(false);
+          resolve();
         },
       });
+
+      if (nextButton) {
+        gsap.set(nextButton, {
+          pointerEvents: "none",
+          x: 0,
+          y: 0,
+        });
+      }
+
+      timeline.to(
+        nextButton,
+        {
+          opacity: 0,
+          duration: BINMAP_TEXT_SWAP.exitDuration,
+          ease: "power2.out",
+          overwrite: "auto",
+        },
+        0,
+      );
+
+      timeline.to(
+        binmapCopy,
+        {
+          opacity: 0,
+          duration: BINMAP_TEXT_SWAP.exitDuration,
+          ease: "power2.out",
+          overwrite: "auto",
+        },
+        0,
+      );
+
+      timeline.call(() => {
+        setBinmapTextMode("detail");
+      });
+
+      timeline.to(
+        {},
+        {
+          duration: BINMAP_TEXT_SWAP.betweenDelay,
+        },
+      );
+
+      timeline.call(() => {
+        gsap.set(binmapCopy, {
+          visibility: "visible",
+          opacity: 0,
+          x: 18,
+          clipPath: "inset(0 100% 0 0)",
+        });
+
+        gsap.set([title, body], {
+          opacity: 1,
+        });
+
+        if (nextButton) {
+          gsap.set(nextButton, {
+            visibility: "visible",
+            opacity: 0,
+            x: 0,
+            y: 0,
+            clipPath: "inset(0 100% 0 0)",
+            pointerEvents: "none",
+          });
+        }
+      });
+
+      timeline.to(binmapCopy, {
+        opacity: 1,
+        x: 0,
+        clipPath: "inset(0 0% 0 0)",
+        duration: BINMAP_TEXT_SWAP.enterDuration,
+        ease: "power3.inOut",
+        overwrite: "auto",
+      });
+
+      if (nextButton) {
+        timeline.to(
+          nextButton,
+          {
+            opacity: 1,
+            clipPath: "inset(0 0% 0 0)",
+            duration: BINMAP_TEXT_SWAP.buttonEnterDuration,
+            ease: "power2.inOut",
+            overwrite: "auto",
+          },
+          `-=${BINMAP_TEXT_SWAP.buttonOverlap}`,
+        );
+      }
     });
   };
 
