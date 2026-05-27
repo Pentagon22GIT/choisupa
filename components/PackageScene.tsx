@@ -7,6 +7,7 @@ import type { CSSProperties } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import gsap from "gsap";
 import { SplitText } from "gsap/SplitText";
+import { PackageMenu } from "./PackageMenu";
 import "./PackageScene.css";
 
 gsap.registerPlugin(SplitText);
@@ -2154,6 +2155,7 @@ function PackageModel({
 export function PackageScene() {
   const [step, setStep] = useState<Step>("top");
   const [isMotionLocked, setIsMotionLocked] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [packageOutlineOpacity, setPackageOutlineOpacity] = useState(1);
   const [binmapCopyVisible, setBinmapCopyVisible] = useState(false);
   const [binmapTextMode, setBinmapTextMode] =
@@ -2950,289 +2952,306 @@ export function PackageScene() {
   };
 
   return (
-    <div className="package-scene" style={sceneStyle}>
-      <div ref={logoGroupRef} className="package-scene__logo" aria-label="logo">
-        <img
-          ref={logoMarkRef}
-          src="/logo1.svg"
-          alt=""
-          className="package-scene__logo-mark"
-        />
+    <div
+      className={[
+        "package-scene",
+        isMenuOpen ? "package-scene--menu-open" : "",
+      ].join(" ")}
+      style={sceneStyle}
+    >
+      <PackageMenu onOpenChange={setIsMenuOpen} />
 
-        <img
-          ref={logoTextRef}
-          src="/logo2.svg"
-          alt=""
-          className="package-scene__logo-text"
-        />
-      </div>
-
-      <div className="package-scene__rakuda-viewport" aria-hidden="true">
-        <div ref={rakudaTrackRef} className="package-scene__rakuda-track">
-          <img
-            src="/webrakuda.png"
-            alt=""
-            className="package-scene__rakuda-image"
-            draggable={false}
-          />
-          <img
-            src="/webrakuda.png"
-            alt=""
-            className="package-scene__rakuda-image"
-            draggable={false}
-          />
-        </div>
-      </div>
-
-      <div
-        ref={tasteCopyRef}
-        className={[
-          "package-scene__taste-copy",
-          step === "taste" ? "is-active" : "",
-        ].join(" ")}
-        aria-hidden={step !== "taste"}
-      >
+      <div className="package-scene__content" aria-hidden={isMenuOpen}>
         <div
-          ref={tasteTitleTargetRef}
-          className="package-scene__taste-title-target"
-        />
+          ref={logoGroupRef}
+          className="package-scene__logo"
+          aria-label="logo"
+        >
+          <img
+            ref={logoMarkRef}
+            src="/logo1.svg"
+            alt=""
+            className="package-scene__logo-mark"
+          />
 
-        <div className="package-scene__taste-body-wrap">
-          <p ref={tasteTextRef} className="package-scene__taste-body">
-            {TASTE_DESCRIPTION_TEXT}
-          </p>
+          <img
+            ref={logoTextRef}
+            src="/logo2.svg"
+            alt=""
+            className="package-scene__logo-text"
+          />
         </div>
 
-        <button
-          ref={tasteNextButtonRef}
-          type="button"
-          onClick={goNext}
-          disabled={isMotionLocked}
-          className="package-scene__taste-next"
+        <div className="package-scene__rakuda-viewport" aria-hidden="true">
+          <div ref={rakudaTrackRef} className="package-scene__rakuda-track">
+            <img
+              src="/webrakuda.png"
+              alt=""
+              className="package-scene__rakuda-image"
+              draggable={false}
+            />
+            <img
+              src="/webrakuda.png"
+              alt=""
+              className="package-scene__rakuda-image"
+              draggable={false}
+            />
+          </div>
+        </div>
+
+        <div
+          ref={tasteCopyRef}
+          className={[
+            "package-scene__taste-copy",
+            step === "taste" ? "is-active" : "",
+          ].join(" ")}
+          aria-hidden={step !== "taste"}
         >
-          次のページへ
-        </button>
-      </div>
+          <div
+            ref={tasteTitleTargetRef}
+            className="package-scene__taste-title-target"
+          />
 
-      <div
-        ref={binmapCopyRef}
-        className={[
-          "package-scene__binmap-copy",
-          binmapCopyVisible ? "is-active" : "",
-        ].join(" ")}
-        aria-hidden={!binmapCopyVisible}
-      >
-        <h2 ref={binmapTitleRef} className="package-scene__binmap-title">
-          {currentBinmapTitle}
-        </h2>
-
-        <p ref={binmapBodyRef} className="package-scene__binmap-body">
-          {currentBinmapText}
-        </p>
-
-        <button
-          ref={binmapNextButtonRef}
-          type="button"
-          onClick={goNext}
-          disabled={isMotionLocked}
-          className="package-scene__binmap-next"
-        >
-          次のページへ
-        </button>
-      </div>
-
-      {step === "final" ? (
-        <>
-          <div ref={finalCopyRef} className="package-scene__final-copy">
-            <section ref={finalLeftRef} className="package-scene__final-left">
-              <p className="package-scene__final-kicker">
-                VISUAL
-                <br />
-                LANGUAGE
-              </p>
-              <p className="package-scene__final-body">{FINAL_LEFT_TEXT}</p>
-            </section>
-
-            <section ref={finalRightRef} className="package-scene__final-right">
-              <p className="package-scene__final-body">{FINAL_RIGHT_TEXT}</p>
-            </section>
+          <div className="package-scene__taste-body-wrap">
+            <p ref={tasteTextRef} className="package-scene__taste-body">
+              {TASTE_DESCRIPTION_TEXT}
+            </p>
           </div>
 
-          <div
-            ref={finalActionPanelRef}
-            className="package-scene__final-action-panel"
+          <button
+            ref={tasteNextButtonRef}
+            type="button"
+            onClick={goNext}
+            disabled={isMotionLocked}
+            className="package-scene__taste-next"
           >
-            <div
-              ref={finalControlsRef}
-              className="package-scene__final-controls"
-            >
-              <div className="package-scene__final-control-group">
-                <p className="package-scene__final-control-label">スリーブ</p>
+            次のページへ
+          </button>
+        </div>
 
-                <div
-                  className="package-scene__final-radio-row"
-                  onClick={() => {
-                    if (isMotionLocked || isFinalControlBusy) return;
-                    setFinalSleeveOpen((current) => !current);
-                  }}
-                >
-                  <label
-                    className="package-scene__final-radio"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      name="final-sleeve"
-                      checked={!finalSleeveOpen}
-                      disabled={isMotionLocked || isFinalControlBusy}
-                      onChange={() => {
-                        setFinalSleeveOpen(false);
-                      }}
-                    />
-                    <span>閉じる</span>
-                  </label>
+        <div
+          ref={binmapCopyRef}
+          className={[
+            "package-scene__binmap-copy",
+            binmapCopyVisible ? "is-active" : "",
+          ].join(" ")}
+          aria-hidden={!binmapCopyVisible}
+        >
+          <h2 ref={binmapTitleRef} className="package-scene__binmap-title">
+            {currentBinmapTitle}
+          </h2>
 
-                  <label
-                    className="package-scene__final-radio"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      name="final-sleeve"
-                      checked={finalSleeveOpen}
-                      disabled={isMotionLocked || isFinalControlBusy}
-                      onChange={() => {
-                        setFinalSleeveOpen(true);
-                      }}
-                    />
-                    <span>開く</span>
-                  </label>
-                </div>
-              </div>
+          <p ref={binmapBodyRef} className="package-scene__binmap-body">
+            {currentBinmapText}
+          </p>
 
-              <div className="package-scene__final-control-group">
-                <p className="package-scene__final-control-label">瓶</p>
+          <button
+            ref={binmapNextButtonRef}
+            type="button"
+            onClick={goNext}
+            disabled={isMotionLocked}
+            className="package-scene__binmap-next"
+          >
+            次のページへ
+          </button>
+        </div>
 
-                <div
-                  className="package-scene__final-radio-row"
-                  onClick={() => {
-                    if (isMotionLocked || isFinalControlBusy) return;
+        {step === "final" ? (
+          <>
+            <div ref={finalCopyRef} className="package-scene__final-copy">
+              <section ref={finalLeftRef} className="package-scene__final-left">
+                <p className="package-scene__final-kicker">
+                  VISUAL
+                  <br />
+                  LANGUAGE
+                </p>
+                <p className="package-scene__final-body">{FINAL_LEFT_TEXT}</p>
+              </section>
 
-                    setFinalBottleRestoreMode("instant");
-                    setFinalBottlesVisible((current) => !current);
-                  }}
-                >
-                  <label
-                    className="package-scene__final-radio"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      name="final-bottles"
-                      checked={finalBottlesVisible}
-                      disabled={isMotionLocked || isFinalControlBusy}
-                      onChange={() => {
-                        setFinalBottleRestoreMode("instant");
-                        setFinalBottlesVisible(true);
-                      }}
-                    />
-                    <span>表示</span>
-                  </label>
-
-                  <label
-                    className="package-scene__final-radio"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      name="final-bottles"
-                      checked={!finalBottlesVisible}
-                      disabled={isMotionLocked || isFinalControlBusy}
-                      onChange={() => {
-                        setFinalBottleRestoreMode("instant");
-                        setFinalBottlesVisible(false);
-                      }}
-                    />
-                    <span>非表示</span>
-                  </label>
-                </div>
-              </div>
+              <section
+                ref={finalRightRef}
+                className="package-scene__final-right"
+              >
+                <p className="package-scene__final-body">{FINAL_RIGHT_TEXT}</p>
+              </section>
             </div>
 
-            <button
-              ref={finalNextButtonRef}
-              type="button"
-              onClick={goNext}
-              disabled={isMotionLocked}
-              className="package-scene__final-next"
+            <div
+              ref={finalActionPanelRef}
+              className="package-scene__final-action-panel"
             >
-              トップに戻る
-            </button>
-          </div>
-        </>
-      ) : null}
+              <div
+                ref={finalControlsRef}
+                className="package-scene__final-controls"
+              >
+                <div className="package-scene__final-control-group">
+                  <p className="package-scene__final-control-label">スリーブ</p>
 
-      <Canvas
-        frameloop="always"
-        camera={{ position: [0, 150, 260], fov: 34 }}
-        gl={{ antialias: true, alpha: true }}
-        onCreated={({ gl }) => {
-          gl.toneMapping = THREE.NoToneMapping;
-          gl.outputColorSpace = THREE.SRGBColorSpace;
-          gl.setClearColor(0x000000, 0);
-        }}
-        className="package-scene__canvas"
-      >
-        <ambientLight intensity={SCENE_LIGHTING.ambientIntensity} />
+                  <div
+                    className="package-scene__final-radio-row"
+                    onClick={() => {
+                      if (isMotionLocked || isFinalControlBusy) return;
+                      setFinalSleeveOpen((current) => !current);
+                    }}
+                  >
+                    <label
+                      className="package-scene__final-radio"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="final-sleeve"
+                        checked={!finalSleeveOpen}
+                        disabled={isMotionLocked || isFinalControlBusy}
+                        onChange={() => {
+                          setFinalSleeveOpen(false);
+                        }}
+                      />
+                      <span>閉じる</span>
+                    </label>
 
-        <directionalLight
-          position={[120, 180, 120]}
-          intensity={SCENE_LIGHTING.keyIntensity}
-          color="#ffffff"
-        />
+                    <label
+                      className="package-scene__final-radio"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="final-sleeve"
+                        checked={finalSleeveOpen}
+                        disabled={isMotionLocked || isFinalControlBusy}
+                        onChange={() => {
+                          setFinalSleeveOpen(true);
+                        }}
+                      />
+                      <span>開く</span>
+                    </label>
+                  </div>
+                </div>
 
-        <directionalLight
-          position={[-120, 80, 180]}
-          intensity={SCENE_LIGHTING.fillIntensity}
-          color="#ffffff"
-        />
-        <PackageModel
-          step={step}
-          setStep={setStep}
-          finalSleeveOpen={finalSleeveOpen}
-          finalBottlesVisible={finalBottlesVisible}
-          finalBottleRestoreMode={finalBottleRestoreMode}
-          onFinalControlBusyChange={setIsFinalControlBusy}
-          onMotionLockedChange={setIsMotionLocked}
-          onPackageOutlineOpacityChange={setPackageOutlineOpacity}
-          onTopPackageHoverChange={setIsTopPackageHovered}
-          onTopPackageClick={goNext}
-          onBinmapFocusStart={() => {
-            setBinmapCopyVisible(true);
+                <div className="package-scene__final-control-group">
+                  <p className="package-scene__final-control-label">瓶</p>
+
+                  <div
+                    className="package-scene__final-radio-row"
+                    onClick={() => {
+                      if (isMotionLocked || isFinalControlBusy) return;
+
+                      setFinalBottleRestoreMode("instant");
+                      setFinalBottlesVisible((current) => !current);
+                    }}
+                  >
+                    <label
+                      className="package-scene__final-radio"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="final-bottles"
+                        checked={finalBottlesVisible}
+                        disabled={isMotionLocked || isFinalControlBusy}
+                        onChange={() => {
+                          setFinalBottleRestoreMode("instant");
+                          setFinalBottlesVisible(true);
+                        }}
+                      />
+                      <span>表示</span>
+                    </label>
+
+                    <label
+                      className="package-scene__final-radio"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="final-bottles"
+                        checked={!finalBottlesVisible}
+                        disabled={isMotionLocked || isFinalControlBusy}
+                        onChange={() => {
+                          setFinalBottleRestoreMode("instant");
+                          setFinalBottlesVisible(false);
+                        }}
+                      />
+                      <span>非表示</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                ref={finalNextButtonRef}
+                type="button"
+                onClick={goNext}
+                disabled={isMotionLocked}
+                className="package-scene__final-next"
+              >
+                トップに戻る
+              </button>
+            </div>
+          </>
+        ) : null}
+
+        <Canvas
+          frameloop="always"
+          camera={{ position: [0, 150, 260], fov: 34 }}
+          gl={{ antialias: true, alpha: true }}
+          onCreated={({ gl }) => {
+            gl.toneMapping = THREE.NoToneMapping;
+            gl.outputColorSpace = THREE.SRGBColorSpace;
+            gl.setClearColor(0x000000, 0);
           }}
-        />
+          className="package-scene__canvas"
+        >
+          <ambientLight intensity={SCENE_LIGHTING.ambientIntensity} />
 
-        <ScreenSpaceOutline packageOutlineOpacity={packageOutlineOpacity} />
+          <directionalLight
+            position={[120, 180, 120]}
+            intensity={SCENE_LIGHTING.keyIntensity}
+            color="#ffffff"
+          />
 
-        <SceneOrbitControls enabled={step === "final"} />
-      </Canvas>
+          <directionalLight
+            position={[-120, 80, 180]}
+            intensity={SCENE_LIGHTING.fillIntensity}
+            color="#ffffff"
+          />
+          <PackageModel
+            step={step}
+            setStep={setStep}
+            finalSleeveOpen={finalSleeveOpen}
+            finalBottlesVisible={finalBottlesVisible}
+            finalBottleRestoreMode={finalBottleRestoreMode}
+            onFinalControlBusyChange={setIsFinalControlBusy}
+            onMotionLockedChange={setIsMotionLocked}
+            onPackageOutlineOpacityChange={setPackageOutlineOpacity}
+            onTopPackageHoverChange={setIsTopPackageHovered}
+            onTopPackageClick={goNext}
+            onBinmapFocusStart={() => {
+              setBinmapCopyVisible(true);
+            }}
+          />
 
-      <div
-        ref={topHintRef}
-        className="package-scene__top-hint"
-        aria-hidden={step !== "top"}
-      >
-        <span ref={topHintTextRef} className="package-scene__top-hint-text">
-          {topHintMessage}
-        </span>
+          <ScreenSpaceOutline packageOutlineOpacity={packageOutlineOpacity} />
+
+          <SceneOrbitControls enabled={step === "final"} />
+        </Canvas>
+
+        <div
+          ref={topHintRef}
+          className="package-scene__top-hint"
+          aria-hidden={step !== "top"}
+        >
+          <span ref={topHintTextRef} className="package-scene__top-hint-text">
+            {topHintMessage}
+          </span>
+        </div>
       </div>
     </div>
   );
